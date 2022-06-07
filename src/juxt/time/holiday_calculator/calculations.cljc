@@ -211,8 +211,8 @@
 (defn working-pattern-for-date
   [working-pattern date]
   (when-let [date-hours (get working-pattern (str (t/day-of-week date)))]
-    {:tick/beginning (LocalDateTime/of date (LocalTime/parse (:juxt.home/beginning-local-time date-hours)))
-     :tick/end (LocalDateTime/of date (LocalTime/parse (:juxt.home/end-local-time date-hours)))}))
+    {:tick/beginning (t/on (t/time (:juxt.home/beginning-local-time date-hours)) date)
+     :tick/end (t/on (t/time (:juxt.home/end-local-time date-hours)) date)}))
 
 (defn staff-records->periods
   "Transform staff-records to periods (adding additional split at year boundaries)"
