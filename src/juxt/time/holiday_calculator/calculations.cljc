@@ -6,7 +6,7 @@
             [tick.alpha.interval :as t.i]
             [tick.protocols :as p]
             [juxt.time.holiday-calculator.datetime-utils :as dt-utils])
-  (:import (java.time DayOfWeek LocalDateTime LocalTime)))
+  (:import (java.time LocalDateTime LocalTime)))
 
 (defn round-half-down [dec]
   (.setScale dec 0 java.math.RoundingMode/HALF_DOWN))
@@ -100,24 +100,6 @@
   "Bankholidays falling within the year = bank-holidays ∩ year"
   [year-interval bank-holidays]
   (t.i/intersection [year-interval] (map dt-utils/->interval bank-holidays)))
-
-(defn weekend?
-  "Is the ZonedDateTime during the weekend?"
-  [dt]
-  (#{DayOfWeek/SATURDAY DayOfWeek/SUNDAY} (p/day-of-week dt)))
-
-(defn get-working-days
-  "Working days:
-  P = year interval
-  B = Bankholidays in P
-  E = Weekends in P
-  W = P - (E ∪ B)"
-  [year-interval bankholidays]
-  (let [weekends (map t.i/bounds
-                      (filter weekend?
-                              (t.i/divide-by t/date
-                                             year-interval)))]
-    (t.i/difference [year-interval] weekends bankholidays)))
 
 (defn get-actual-years-holidays
   "Holidays taken H = holidays for the year ∩ working days in the year"
@@ -226,6 +208,12 @@
    ;; skip over seed
    next))
 
+(defn working-pattern-for-date
+  [working-pattern date]
+  (when-let [date-hours (get working-pattern (str (t/day-of-week date)))]
+    {:tick/beginning (LocalDateTime/of date (LocalTime/parse (:juxt.home/beginning-local-time date-hours)))
+     :tick/end (LocalDateTime/of date (LocalTime/parse (:juxt.home/end-local-time date-hours)))}))
+
 (defn staff-records->periods
   "Transform staff-records to periods (adding additional split at year boundaries)"
   [staff-member-record-collection ceiling-year public-holidays holiday-intervals]
@@ -261,12 +249,7 @@
                                   (t.i/new-interval (t/date (t/beginning period)) (t/end date)))
                                  (t/duration (t/year date)))))
 
-                  working-hours (get working-pattern (str (.getDayOfWeek date)))
-
-                  working-interval
-                  (when working-hours
-                    {:tick/beginning (LocalDateTime/of date (LocalTime/parse (:juxt.home/beginning-local-time working-hours)))
-                     :tick/end (LocalDateTime/of date (LocalTime/parse (:juxt.home/end-local-time working-hours)))})
+                  working-interval (working-pattern-for-date working-pattern date)
 
                   public-holiday
                   (get public-holidays [(:juxt.home/public-holiday-region staff-record) date])
@@ -286,9 +269,9 @@
 
               (cond-> {:date date
                        :day-of-week
-                                {:value (.getDayOfWeek date)
+                                {:value (t/day-of-week date)
                                  :display (.getDisplayName
-                                           (.getDayOfWeek date) java.time.format.TextStyle/FULL_STANDALONE
+                                           (t/day-of-week date) java.time.format.TextStyle/FULL_STANDALONE
                                            ;; TODO: Could make this a dynamic var binding?
                                            (java.util.Locale/getDefault))}
 

@@ -3,7 +3,8 @@
 (ns juxt.time.holiday-calculator.calculations-test
   (:require  [clojure.test :refer [deftest testing is]]
              [tick.core :as t]
-             [juxt.time.holiday-calculator.calculations :as sut]))
+             [juxt.time.holiday-calculator.calculations :as sut]
+             [tick.alpha.interval :as t.i]))
 
 (def full-time-work-pattern ; 40 hrs
   {"MONDAY"
@@ -43,6 +44,50 @@
                                         {:juxt.home/effective-from #inst "2019-11-30T00:00"
                                          :juxt.home/employment-type "EMPLOYEE"
                                          :juxt.home/status "TERMINATED"}])
+
+(deftest working-pattern-for-date-test
+  (let [sunday (t/date "2022-06-05")
+        monday (t/date "2022-06-06")
+        tuesday (t/date "2022-06-07")]
+
+    (testing "Returns nil when employee does not work on the given date"
+      (is (nil? (sut/working-pattern-for-date
+                 {}
+                 sunday)))
+      (is (nil? (sut/working-pattern-for-date
+                 {"MONDAY" #:juxt.home {:beginning-local-time "09:00"
+                                        :end-local-time "17:00"}}
+                 sunday)))
+      (is (nil? (sut/working-pattern-for-date
+                 {"MONDAY" #:juxt.home {:beginning-local-time "09:00"
+                                        :end-local-time "17:00"}}
+                 tuesday)))
+      (is (nil? (sut/working-pattern-for-date
+                 {"SUNDAY" #:juxt.home {:beginning-local-time "09:00"
+                                        :end-local-time "17:00"}
+                  "TUESDAY" #:juxt.home {:beginning-local-time "09:00"
+                                         :end-local-time "17:00"}}
+                 monday))))
+
+    (testing "Returns tick/beginning and tick/end version of working time for date"
+      (is (= {:tick/beginning (t/date-time "2022-06-06T09:00")
+              :tick/end (t/date-time "2022-06-06T17:00")}
+             (sut/working-pattern-for-date
+                 {"MONDAY" #:juxt.home {:beginning-local-time "09:00"
+                                        :end-local-time "17:00"}}
+                 monday)))
+      (is (= {:tick/beginning (t/date-time "2022-06-07T09:00")
+              :tick/end (t/date-time "2022-06-07T17:00")}
+             (sut/working-pattern-for-date
+                 {"TUESDAY" #:juxt.home {:beginning-local-time "09:00"
+                                        :end-local-time "17:00"}}
+                 tuesday)))
+      (is (= {:tick/beginning (t/date-time "2022-06-06T10:00")
+              :tick/end (t/date-time "2022-06-06T16:00")}
+             (sut/working-pattern-for-date
+                 {"MONDAY" #:juxt.home {:beginning-local-time "10:00"
+                                        :end-local-time "16:00"}}
+                 monday))))))
 
 (deftest monthly-holiday-accrual-rate-test
   (testing "Calculates accrual rate for given entitlement, working pattern and full time hours for full time employees"
