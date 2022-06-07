@@ -171,4 +171,21 @@
         (is (= (t/date-time "2019-04-01T00:00") (:tick/beginning (first periods))))
         (is (= (t/date-time "2019-11-30T00:00") (:tick/end (first periods))))
         (is (= (t/date-time "2019-11-30T00:00") (:tick/beginning (second periods))))
-        (is (= (t/date-time "2020-01-01T00:00") (:tick/end (second periods))))))))
+        (is (= (t/date-time "2020-01-01T00:00") (:tick/end (second periods))))))
+
+    (testing "usual-working-from and usual-working-to are assigned from working-interval for date"
+      (let [period (-> basic-full-time-staff-record
+                       (assoc-in [0 :juxt.home/working-pattern] part-time-work-pattern)
+                       (sut/staff-records->periods (t/year "2019") [] [])
+                       first
+                       :dates
+                       ((fn [dates] (reduce
+                           (fn [acc n] (assoc acc (:date n) (select-keys n [:usual-working-from :usual-working-to])))
+                           {}
+                           dates))))]
+        (is (= {:usual-working-from "09:00"
+                :usual-working-to "17:00"}
+               (get period (t/date "2019-04-02"))))
+        (is (= {:usual-working-from "09:00"
+                :usual-working-to "13:00"}
+               (get period (t/date "2019-04-03"))))))))
