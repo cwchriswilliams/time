@@ -37,6 +37,7 @@
 (def basic-full-time-staff-record [{:juxt.home/effective-from #inst "2019-04-01T00:00"
                                     :juxt.home/employment-type "EMPLOYEE"
                                     :juxt.home/status "ACTIVE"}])
+
 (def terminated-full-time-staff-record [{:juxt.home/effective-from #inst "2019-04-01T00:00"
                                          :juxt.home/effective-to #inst "2019-11-30T00:00"
                                          :juxt.home/employment-type "EMPLOYEE"
@@ -45,24 +46,24 @@
                                          :juxt.home/employment-type "EMPLOYEE"
                                          :juxt.home/status "TERMINATED"}])
 
-(deftest working-pattern-for-date-test
+(deftest working-pattern->interval-test
   (let [sunday (t/date "2022-06-05")
         monday (t/date "2022-06-06")
         tuesday (t/date "2022-06-07")]
 
     (testing "Returns nil when employee does not work on the given date"
-      (is (nil? (sut/working-pattern-for-date
+      (is (nil? (sut/working-pattern->interval
                  {}
                  sunday)))
-      (is (nil? (sut/working-pattern-for-date
+      (is (nil? (sut/working-pattern->interval
                  {"MONDAY" #:juxt.home {:beginning-local-time "09:00"
                                         :end-local-time "17:00"}}
                  sunday)))
-      (is (nil? (sut/working-pattern-for-date
+      (is (nil? (sut/working-pattern->interval
                  {"MONDAY" #:juxt.home {:beginning-local-time "09:00"
                                         :end-local-time "17:00"}}
                  tuesday)))
-      (is (nil? (sut/working-pattern-for-date
+      (is (nil? (sut/working-pattern->interval
                  {"SUNDAY" #:juxt.home {:beginning-local-time "09:00"
                                         :end-local-time "17:00"}
                   "TUESDAY" #:juxt.home {:beginning-local-time "09:00"
@@ -72,19 +73,19 @@
     (testing "Returns tick/beginning and tick/end version of working time for date"
       (is (= {:tick/beginning (t/date-time "2022-06-06T09:00")
               :tick/end (t/date-time "2022-06-06T17:00")}
-             (sut/working-pattern-for-date
+             (sut/working-pattern->interval
                  {"MONDAY" #:juxt.home {:beginning-local-time "09:00"
                                         :end-local-time "17:00"}}
                  monday)))
       (is (= {:tick/beginning (t/date-time "2022-06-07T09:00")
               :tick/end (t/date-time "2022-06-07T17:00")}
-             (sut/working-pattern-for-date
+             (sut/working-pattern->interval
                  {"TUESDAY" #:juxt.home {:beginning-local-time "09:00"
                                         :end-local-time "17:00"}}
                  tuesday)))
       (is (= {:tick/beginning (t/date-time "2022-06-06T10:00")
               :tick/end (t/date-time "2022-06-06T16:00")}
-             (sut/working-pattern-for-date
+             (sut/working-pattern->interval
                  {"MONDAY" #:juxt.home {:beginning-local-time "10:00"
                                         :end-local-time "16:00"}}
                  monday))))))

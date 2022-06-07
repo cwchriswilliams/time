@@ -210,6 +210,10 @@
 
 (defn working-pattern-for-date
   [working-pattern date]
+  (get working-pattern (str (t/day-of-week date))))
+
+(defn working-pattern->interval
+  [working-pattern date]
   (when-let [date-hours (get working-pattern (str (t/day-of-week date)))]
     {:tick/beginning (t/on (t/time (:juxt.home/beginning-local-time date-hours)) date)
      :tick/end (t/on (t/time (:juxt.home/end-local-time date-hours)) date)}))
@@ -249,7 +253,7 @@
                                   (t.i/new-interval (t/date (t/beginning period)) (t/end date)))
                                  (t/duration (t/year date)))))
 
-                  working-interval (working-pattern-for-date working-pattern date)
+                  working-interval (working-pattern->interval working-pattern date)
 
                   public-holiday
                   (get public-holidays [(:juxt.home/public-holiday-region staff-record) date])
