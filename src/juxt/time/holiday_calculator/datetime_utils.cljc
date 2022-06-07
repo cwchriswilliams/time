@@ -2,7 +2,8 @@
 
 (ns juxt.time.holiday-calculator.datetime-utils
   (:require [tick.core :as t]
-            [tick.alpha.interval :as t.i]))
+            [tick.alpha.interval :as t.i]
+            #?(:cljs [goog.string :as gstring])))
 
 (defn date->local-date-time
   [inst]
@@ -29,7 +30,8 @@
 (defn days-as-map [value]
   {:value value
    :units "days"
-   :display-with-units (format "%02.1f days" (float value))})
+   :display-with-units #?(:clj (format "%02.1f days" (float value))
+                          :cljs (gstring/format "%02.1f days" (float value)))})
 
 (defn duration-as-map
   "Represent the duration in working-days, based up the number of
@@ -40,8 +42,4 @@
   {:value duration
    ;; TODO: Should use locale as a dynamic var
    :days (let [value (bigdec (/ (.toHours duration) (/ full-time-hours 5)))]
-           (days-as-map value))
-   #_:hours #_(let [value (.toHours deduction)]
-                {:value value
-                 :units "hours"
-                 :display-with-units (format "%d hours" value)})})
+           (days-as-map value))})

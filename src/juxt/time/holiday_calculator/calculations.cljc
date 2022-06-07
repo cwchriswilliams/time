@@ -5,7 +5,8 @@
             [tick.core :as t]
             [tick.alpha.interval :as t.i]
             [tick.protocols :as p]
-            [juxt.time.holiday-calculator.datetime-utils :as dt-utils]))
+            [juxt.time.holiday-calculator.datetime-utils :as dt-utils]
+            #?(:cljs [goog.string :as gstring])))
 
 (defn round-half-down [dec]
   (.setScale dec 0 java.math.RoundingMode/HALF_DOWN))
@@ -273,10 +274,7 @@
               (cond-> {:date date
                        :day-of-week
                                 {:value (t/day-of-week date)
-                                 :display (.getDisplayName
-                                           (t/day-of-week date) java.time.format.TextStyle/FULL_STANDALONE
-                                           ;; TODO: Could make this a dynamic var binding?
-                                           (java.util.Locale/getDefault))}
+                                 :display (str/capitalize (str (t/day-of-week)))}
 
                        :closing-whole-months-accrued-since-period-beginning
                        closing-whole-months-accrued-since-period-beginning
@@ -304,9 +302,12 @@
                        :holiday-dates
                        (->>
                         (for [h holidays]
-                          (format "%s – %s"
-                                  (:juxt.home/beginning-local-date-time h)
-                                  (:juxt.home/end-local-date-time h)))
+                          #?(:clj (format "%s – %s"
+                                          (:juxt.home/beginning-local-date-time h)
+                                          (:juxt.home/end-local-date-time h))
+                             :cljs (gstring/format "%s – %s"
+                                          (:juxt.home/beginning-local-date-time h)
+                                          (:juxt.home/end-local-date-time h))))
                         (str/join ", "))))))]
 
       (assoc period
@@ -323,7 +324,8 @@
                 :display (to-displayable-float monthly-holiday-accrual-rate)
                 :units "days per month"
                 :display-with-units
-                (format "%s days per month" (to-displayable-float monthly-holiday-accrual-rate))})
+                #?(:clj (format "%s days per month" (to-displayable-float monthly-holiday-accrual-rate))
+                   :cljs (gstring/format "%s days per month" (to-displayable-float monthly-holiday-accrual-rate)))})
              :deduction (when (:juxt.home/full-time-hours period)
                           (dt-utils/duration-as-map (apply t/+ (keep (comp :value :deduction) dates))
                                            (:juxt.home/full-time-hours period)))))))
