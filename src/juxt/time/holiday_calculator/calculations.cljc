@@ -5,8 +5,7 @@
             [tick.core :as t]
             [tick.alpha.interval :as t.i]
             [tick.protocols :as p]
-            [juxt.time.holiday-calculator.datetime-utils :as dt-utils])
-  (:import (java.time LocalDateTime LocalTime)))
+            [juxt.time.holiday-calculator.datetime-utils :as dt-utils]))
 
 (defn round-half-down [dec]
   (.setScale dec 0 java.math.RoundingMode/HALF_DOWN))
@@ -75,7 +74,7 @@
    ;; Convert to local time, since start-dates are dates, not times.
    dt-utils/date->local-date-exclusive))
 
-(defn staff-member-record->interval [period ^LocalDateTime ceiling]
+(defn staff-member-record->interval [period ceiling]
   (let [from (dt-utils/date->local-date-time (:juxt.home/effective-from period))
         to (if-let [effective-to (some-> (:juxt.home/effective-to period) dt-utils/date->local-date-time)]
              (if (.isBefore effective-to ceiling) effective-to ceiling) ceiling)]
@@ -292,9 +291,10 @@
                 public-holiday (assoc :public-holiday (:name public-holiday))
 
                 (and (not public-holiday) working-interval)
-                (assoc :usual-working-from (str (.toLocalTime (:tick/beginning working-interval)))
-                       :usual-working-to (str (.toLocalTime (:tick/end working-interval))))
-
+                (merge (clojure.set/rename-keys
+                        (working-pattern-for-date working-pattern date)
+                        {:juxt.home/beginning-local-time :usual-working-from
+                                                                                     :juxt.home/end-local-time :usual-working-to}))
                 (seq holidays)
                 (assoc :holidays (mapv (fn [x] (dissoc x :tick/beginning :tick/end)) holidays)
                        :holiday-description
