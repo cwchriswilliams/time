@@ -8,10 +8,7 @@
             [juxt.time.holiday-calculator.calculations :as calc]
             [tick.core :as t]
             [tick.protocols :as p]
-            [tick.alpha.interval :as t.i])
-  (:import
-   (java.time DayOfWeek LocalDate LocalDateTime LocalTime ZoneId)
-   (java.time.format DateTimeFormatter)))
+            [tick.alpha.interval :as t.i]))
 
 (defn get-record-for-date
   "Returns the calendar details for a given date"
@@ -30,8 +27,6 @@
            (when-let [doc from]
              (cond-> (assoc doc :juxt.home/effective-from (:juxt.home/employment-change-date from))
                to (assoc :juxt.home/effective-to (:juxt.home/employment-change-date to))))))))
-
-
 
 (defn calendar
   "Generates a collection of records for dates worked with holiday status for each day

@@ -2,43 +2,25 @@
 
 (ns juxt.time.holiday-calculator.datetime-utils
   (:require [tick.core :as t]
-            [tick.alpha.interval :as t.i])
-  (:import
-   (java.time DayOfWeek LocalDate LocalDateTime LocalTime ZoneId)
-   (java.time.format DateTimeFormatter)))
-
-
-(defn format-iso-local-date [local-date]
-  (.format
-   local-date
-   DateTimeFormatter/ISO_LOCAL_DATE))
+            [tick.alpha.interval :as t.i]))
 
 (defn date->local-date-time
   [inst]
   (assert inst)
-  (LocalDateTime/ofInstant
-   (.toInstant inst)
-   ;; We happen to know that valid-time in XTDB is stored as UTC
-   (ZoneId/of "Z")))
+  (t/date-time (t/in inst "UTC")))
 
 (defn date->local-date
   [inst]
   (assert inst)
-  (LocalDate/ofInstant
-   (.toInstant inst)
-   ;; We happen to know that valid-time in XTDB is stored as UTC
-   (ZoneId/of "Z")))
+  (t/date (t/in inst "UTC")))
 
 (defn date->local-date-exclusive
   "Return the java.time.LocalDate of the given #inst, but if midnight, return the
   previous day."
   [inst]
-  (let [res (LocalDateTime/ofInstant
-             (.toInstant inst)
-             ;; We happen to know that valid-time in XTDB is stored as UTC
-           (ZoneId/of "Z"))]
-  (cond-> (.toLocalDate res)
-    (= (.toLocalTime res) LocalTime/MIDNIGHT) (.minusDays 1))))
+  (if (t/midnight? (date->local-date-time inst))
+    (t/<< (date->local-date inst) (t/new-period 1 :days))
+    (date->local-date inst)))
 
 (defn ->interval [{:keys [start end]}]
   #:tick{:beginning (:tick/beginning (t.i/bounds (t/date start)))
