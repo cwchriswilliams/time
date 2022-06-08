@@ -41,5 +41,5 @@
   [duration full-time-hours]
   {:value duration
    ;; TODO: Should use locale as a dynamic var
-   :days (let [value (bigdec (/ (t/hours duration) (/ full-time-hours 5)))]
+   :days (let [value (double (/ (t/hours duration) (/ full-time-hours 5)))]
            (days-as-map value))})

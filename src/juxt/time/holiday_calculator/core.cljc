@@ -35,24 +35,23 @@
   beginning of continuous service to end of service or ceiling year with
   records of holidays assoc."
   [{:keys [staff-member-record-collection public-holidays personal-holidays ceiling-year]}]
-  (with-precision 4 :rounding java.math.MathContext/HALF_DOWN
-    (->
-     (let [
-           ;; Since some periods are boundless, we have to say the year up to and
-           ;; including which we want the report to run.
+  (->
+   (let [
+         ;; Since some periods are boundless, we have to say the year up to and
+         ;; including which we want the report to run.
 
 
-           ;; Each holiday as an interval, used below to determine if a give date
-           ;; intersects one or more holidays.
-           holiday-intervals (->> personal-holidays
-                                  (map calc/holiday-as-tick-interval)
-                                  (sort-by :tick/beginning))
+         ;; Each holiday as an interval, used below to determine if a give date
+         ;; intersects one or more holidays.
+         holiday-intervals (->> personal-holidays
+                                (map calc/holiday-as-tick-interval)
+                                (sort-by :tick/beginning))
 
-           periods (calc/staff-records->periods staff-member-record-collection ceiling-year public-holidays holiday-intervals)]
+         periods (calc/staff-records->periods staff-member-record-collection ceiling-year public-holidays holiday-intervals)]
 
-       periods
+     periods
 
-       (vec (calc/generate-calendar-from-periods periods))))))
+     (vec (calc/generate-calendar-from-periods periods)))))
 
 #?(:clj
    (do

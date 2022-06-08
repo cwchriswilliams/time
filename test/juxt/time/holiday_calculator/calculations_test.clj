@@ -142,25 +142,25 @@
 (deftest round-half-down-test
   (testing "Rounds down for values < 0.5"
     (is (= 1.0 (sut/round-half-down 1.0)))
-    (is (= 1.0 (sut/round-half-down (- 1.5 0.0000000000000000000001M)))))
+    (is (= 1.0 (sut/round-half-down (- 1.5 0.0000000000000000000001)))))
   (testing "Rounds down for values = 0.5"
     (is (= 1.0 (sut/round-half-down 1.5)))
     )
   (testing "Rounds up for values > 0.5"
     (is (= 2.0 (sut/round-half-down 1.9999999999999999999)))
     (is (= 2.0 (sut/round-half-down 1.6)))
-    (is (= 2.0 (sut/round-half-down (+ 1.5 0.000000001M))))))
+    (is (= 2.0 (sut/round-half-down (+ 1.5 0.000000001))))))
 
 (deftest to-displayable-float-test
   (testing "Generates floats to 4 significant figures"
-    (is (= 1.0 (sut/to-displayable-float (bigdec 1.0))))
-    (is (= 1.5 (sut/to-displayable-float (bigdec 1.5))))
-    (is (= 1.1 (sut/to-displayable-float (bigdec 1.1))))
-    (is (= 1.001 (sut/to-displayable-float (bigdec 1.001))))
-    (is (= 1.0 (sut/to-displayable-float (bigdec 1.0001))))
-    (is (= 1.001 (sut/to-displayable-float (bigdec 1.0005))))
-    (is (= 1.123 (sut/to-displayable-float (bigdec 1.1234567))))
-    (is (= 123500.0 (sut/to-displayable-float (bigdec 123456.1234567))))))
+    (is (= 1.0 (sut/to-displayable-float 1.0)))
+    (is (= 1.5 (sut/to-displayable-float 1.5)))
+    (is (= 1.1 (sut/to-displayable-float 1.1)))
+    (is (= 1.001 (sut/to-displayable-float 1.001)))
+    (is (= 1.0 (sut/to-displayable-float 1.0001)))
+    (is (= 1.001 (sut/to-displayable-float 1.0005)))
+    (is (= 1.123 (sut/to-displayable-float 1.1234567)))
+    (is (= 123500.0 (sut/to-displayable-float 123456.1234567)))))
 
 (deftest monthly-holiday-accrual-rate-test
   (testing "Calculates accrual rate for given entitlement, working pattern and full time hours for full time employees"
@@ -220,44 +220,43 @@
     (is (= 5 (sut/calculate-balance {:closing-holiday-days-accrued-since-period-beginning {:value 6}} 4 3)))))
 
 (deftest staff-records->periods-test
-  (with-precision 4 :rounding java.math.MathContext/HALF_DOWN
-    (testing "Periods begin at start date to end of the year"
-      (let [periods (vec (sut/staff-records->periods basic-full-time-staff-record (t/year "2019") [] []))]
-        (is (= 1 (count periods)))
-        (is (= (t/date-time "2019-04-01T00:00") (:tick/beginning (first periods))))
-        (is (= (t/date-time "2020-01-01T00:00") (:tick/end (first periods))))))
+  (testing "Periods begin at start date to end of the year"
+    (let [periods (vec (sut/staff-records->periods basic-full-time-staff-record (t/year "2019") [] []))]
+      (is (= 1 (count periods)))
+      (is (= (t/date-time "2019-04-01T00:00") (:tick/beginning (first periods))))
+      (is (= (t/date-time "2020-01-01T00:00") (:tick/end (first periods))))))
 
-    (testing "If ceiling year is > employee history start date, periods are split at year boundary"
-      (let [periods (vec (sut/staff-records->periods basic-full-time-staff-record (t/year "2020") [] []))]
-        (is (= 2 (count periods)))
-        (is (= (t/date-time "2019-04-01T00:00") (:tick/beginning (first periods))))
-        (is (= (t/date-time "2020-01-01T00:00") (:tick/end (first periods))))
-        (is (= (t/date-time "2020-01-01T00:00") (:tick/beginning (second periods))))
-        (is (= (t/date-time "2021-01-01T00:00") (:tick/end (second periods))))))
+  (testing "If ceiling year is > employee history start date, periods are split at year boundary"
+    (let [periods (vec (sut/staff-records->periods basic-full-time-staff-record (t/year "2020") [] []))]
+      (is (= 2 (count periods)))
+      (is (= (t/date-time "2019-04-01T00:00") (:tick/beginning (first periods))))
+      (is (= (t/date-time "2020-01-01T00:00") (:tick/end (first periods))))
+      (is (= (t/date-time "2020-01-01T00:00") (:tick/beginning (second periods))))
+      (is (= (t/date-time "2021-01-01T00:00") (:tick/end (second periods))))))
 
-    (testing "If employee is terminated before ceiling year end, period extends to termination"
-      (let [periods (-> terminated-full-time-staff-record
-                        (sut/staff-records->periods (t/year "2019") [] [])
-                        vec)]
-        (is (= 2 (count periods)))
-        (is (= (t/date-time "2019-04-01T00:00") (:tick/beginning (first periods))))
-        (is (= (t/date-time "2019-11-30T00:00") (:tick/end (first periods))))
-        (is (= (t/date-time "2019-11-30T00:00") (:tick/beginning (second periods))))
-        (is (= (t/date-time "2020-01-01T00:00") (:tick/end (second periods))))))
+  (testing "If employee is terminated before ceiling year end, period extends to termination"
+    (let [periods (-> terminated-full-time-staff-record
+                      (sut/staff-records->periods (t/year "2019") [] [])
+                      vec)]
+      (is (= 2 (count periods)))
+      (is (= (t/date-time "2019-04-01T00:00") (:tick/beginning (first periods))))
+      (is (= (t/date-time "2019-11-30T00:00") (:tick/end (first periods))))
+      (is (= (t/date-time "2019-11-30T00:00") (:tick/beginning (second periods))))
+      (is (= (t/date-time "2020-01-01T00:00") (:tick/end (second periods))))))
 
-    (testing "usual-working-from and usual-working-to are assigned from working-interval for date"
-      (let [period (-> basic-full-time-staff-record
-                       (assoc-in [0 :juxt.home/working-pattern] part-time-work-pattern)
-                       (sut/staff-records->periods (t/year "2019") [] [])
-                       first
-                       :dates
-                       ((fn [dates] (reduce
-                           (fn [acc n] (assoc acc (:date n) (select-keys n [:usual-working-from :usual-working-to])))
-                           {}
-                           dates))))]
-        (is (= {:usual-working-from "09:00"
-                :usual-working-to "17:00"}
-               (get period (t/date "2019-04-02"))))
-        (is (= {:usual-working-from "09:00"
-                :usual-working-to "13:00"}
-               (get period (t/date "2019-04-03"))))))))
+  (testing "usual-working-from and usual-working-to are assigned from working-interval for date"
+    (let [period (-> basic-full-time-staff-record
+                     (assoc-in [0 :juxt.home/working-pattern] part-time-work-pattern)
+                     (sut/staff-records->periods (t/year "2019") [] [])
+                     first
+                     :dates
+                     ((fn [dates] (reduce
+                                   (fn [acc n] (assoc acc (:date n) (select-keys n [:usual-working-from :usual-working-to])))
+                                   {}
+                                   dates))))]
+      (is (= {:usual-working-from "09:00"
+              :usual-working-to "17:00"}
+             (get period (t/date "2019-04-02"))))
+      (is (= {:usual-working-from "09:00"
+              :usual-working-to "13:00"}
+             (get period (t/date "2019-04-03")))))))

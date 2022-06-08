@@ -16,7 +16,6 @@
   (parse-double #?(:clj (format "%.4g" m)
                    :cljs (gstring/format "%.4g" m))))
 
-
 (defn holiday-duration-in-hours
   [{:keys [object-type object-value field-name argument-values
            db]}]
@@ -226,7 +225,7 @@
   (for [staff-record
         (filter #(= (:juxt.home/employment-type %) "EMPLOYEE") staff-member-record-collection)                       ;; only periods where holiday is a benefit
         :let [staff-record-interval (staff-member-record->interval staff-record (t/end ceiling-year))
-              monthly-holiday-accrual-rate (some-> staff-record monthly-holiday-accrual-rate bigdec)
+              monthly-holiday-accrual-rate (some-> staff-record monthly-holiday-accrual-rate double)
               working-pattern (:juxt.home/working-pattern staff-record)
               full-time-hours (:juxt.home/full-time-hours staff-record)]
         days-in-year (t/range (t/year (t/beginning staff-record-interval))

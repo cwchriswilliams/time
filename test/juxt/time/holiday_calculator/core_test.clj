@@ -3,6 +3,7 @@
 (ns juxt.time.holiday-calculator.core-test
   (:require [clojure.java.io :as io]
             [juxt.time.holiday-calculator.core :as sut]
+            [juxt.time.holiday-calculator.calculations :refer [round-half-down]]
             [tick.core :as t]
             [tick.alpha.ical :as ical]
             [clojure.test :refer [deftest testing is]]))
@@ -176,47 +177,47 @@
                          :ceiling-year (t/year "2021")}
         test-calendar (sut/calendar calendar-inputs)
         dayc-15-holidays {:juxt.home/beginning-local-date-time "2019-11-01T00:00"
-                     :juxt.home/end-local-date-time "2019-11-22T00:00"
-                     :description "15 days holiday taken (skipping-weekends)"}
+                     :juxt.home/end-local-date-time "2019-11-23T00:00"
+                     :description "16 days holiday taken (skipping-weekends)"}
         dayc-18-holidays {:juxt.home/beginning-local-date-time "2019-11-01T00:00"
-                     :juxt.home/end-local-date-time "2019-11-27T00:00"
-                     :description "18 days holiday taken (skipping weekends"}
+                     :juxt.home/end-local-date-time "2019-11-28T00:00"
+                     :description "19 days holiday taken (skipping weekends"}
         test-calendar-with-15-holidays-taken (sut/calendar (assoc calendar-inputs :personal-holidays [dayc-15-holidays]))
-        test-calendar-with-18-holidays-taken (sut/calendar (assoc calendar-inputs :personal-holidays [dayc-18-holidays]))]
+        test-calendar-with-19-holidays-taken (sut/calendar (assoc calendar-inputs :personal-holidays [dayc-18-holidays]))]
 
     (testing "On the staff-member's first day, balance is 0"
-      (is (zero? (int (:balance (sut/get-record-for-date (t/date "2019-04-01") test-calendar))))))
+      (is (zero? (round-half-down (:balance (sut/get-record-for-date (t/date "2019-04-01") test-calendar))))))
 
     (testing "Holiday balance accrues throughout the year to (/ entitlement fraction-worked)"
-      (is (= 1 (int (:balance (sut/get-record-for-date (t/date "2019-04-15") test-calendar)))))
-      (is (= 9 (int (:balance (sut/get-record-for-date (t/date "2019-08-15") test-calendar)))))
-      (is (= 18 (int (:balance (sut/get-record-for-date (t/date "2019-12-31") test-calendar))))))
+      (is (= 1.0 (round-half-down (:balance (sut/get-record-for-date (t/date "2019-04-15") test-calendar)))))
+      (is (= 9.0 (round-half-down (:balance (sut/get-record-for-date (t/date "2019-08-15") test-calendar)))))
+      (is (= 19.0 (round-half-down (:balance (sut/get-record-for-date (t/date "2019-12-31") test-calendar))))))
 
     (testing "Holiday balance is reduced by holidays-taken"
-      (is (= 3 (int (:balance (sut/get-record-for-date (t/date "2019-12-31") test-calendar-with-15-holidays-taken)))))
-      (is (= 0 (int (:balance (sut/get-record-for-date (t/date "2019-12-31") test-calendar-with-18-holidays-taken))))))
+      (is (= 3.0 (round-half-down (:balance (sut/get-record-for-date (t/date "2019-12-31") test-calendar-with-15-holidays-taken)))))
+      (is (= 0.0 (round-half-down (:balance (sut/get-record-for-date (t/date "2019-12-31") test-calendar-with-19-holidays-taken))))))
 
     (testing "Holiday balance can go negative"
-      (is (= -1 (int (:balance (sut/get-record-for-date (t/date "2019-11-27") test-calendar-with-18-holidays-taken))))))
+      (is (= -1.0 (round-half-down (:balance (sut/get-record-for-date (t/date "2019-12-12") test-calendar-with-19-holidays-taken))))))
 
     (testing "Jan 1st, balance is equal to 0 + carryover"
-      (is (= 5 (int (:balance (sut/get-record-for-date (t/date "2020-01-01") test-calendar)))))
-      (is (= 3 (int (:balance (sut/get-record-for-date (t/date "2020-01-01") test-calendar-with-15-holidays-taken)))))
-      (is (= 0 (int (:balance (sut/get-record-for-date (t/date "2020-01-01") test-calendar-with-18-holidays-taken))))))
+      (is (= 5.0 (round-half-down (:balance (sut/get-record-for-date (t/date "2020-01-01") test-calendar)))))
+      (is (= 3.0 (round-half-down (:balance (sut/get-record-for-date (t/date "2020-01-01") test-calendar-with-15-holidays-taken)))))
+      (is (= 0.0 (round-half-down (:balance (sut/get-record-for-date (t/date "2020-01-01") test-calendar-with-19-holidays-taken))))))
 
     (testing "By the end of the second year employment, balance should equal (+ entitlement carry)"
-      (is (= 30 (int (:balance (sut/get-record-for-date (t/date "2020-12-31") test-calendar)))))
-      (is (= 28 (int (:balance (sut/get-record-for-date (t/date "2020-12-31") test-calendar-with-15-holidays-taken)))))
-      (is (= 25 (int (:balance (sut/get-record-for-date (t/date "2020-12-31") test-calendar-with-18-holidays-taken)))))))
+      (is (= 30.0 (round-half-down (:balance (sut/get-record-for-date (t/date "2020-12-31") test-calendar)))))
+      (is (= 28.0 (round-half-down (:balance (sut/get-record-for-date (t/date "2020-12-31") test-calendar-with-15-holidays-taken)))))
+      (is (= 25.0 (round-half-down (:balance (sut/get-record-for-date (t/date "2020-12-31") test-calendar-with-19-holidays-taken)))))))
 
   (testing "When an employee is active, then goes inactive and then active again, entitlement resumes, but was paused"
     (let [history (conj basic-full-time-user-history basic-employment-inactive-event basic-employment-reactivated-event)
           record-collection (sut/history->staff-member-record-collection history)
           calendar (sut/calendar {:staff-member-record-collection record-collection
                                   :ceiling-year "2020"})]
-      (is (= 4 (int (:balance (sut/get-record-for-date (t/date "2019-06-01") calendar)))))
-      (is (= 4 (int (:balance (sut/get-record-for-date (t/date "2019-10-01") calendar)))))
-      (is (= 10 (int (:balance (sut/get-record-for-date (t/date "2019-12-31") calendar))))))))
+      (is (= 4.0 (round-half-down (:balance (sut/get-record-for-date (t/date "2019-06-01") calendar)))))
+      (is (= 4.0 (round-half-down (:balance (sut/get-record-for-date (t/date "2019-10-01") calendar)))))
+      (is (= 10.0 (round-half-down (:balance (sut/get-record-for-date (t/date "2019-12-31") calendar))))))))
 
 (comment
 
@@ -226,4 +227,5 @@
          (remove #(#{(t/day-of-week "SATURDAY") (t/day-of-week "SUNDAY")} (t/day-of-week %)))
          (take holiday-count)
          ((juxt first last))))
-  )
+
+)
