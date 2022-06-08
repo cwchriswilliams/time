@@ -139,6 +139,27 @@
                                         :end-local-time "16:00"}}
                  monday))))))
 
+(deftest round-half-down-test
+  (testing "Rounds down for values <= 0.5"
+    (is (= 1.0 (sut/round-half-down (bigdec 1.0))))
+    (is (= 1.0 (sut/round-half-down (bigdec 1.5))))
+    (is (= 1.0 (sut/round-half-down (- (bigdec 1.5) 0.0000000000000000000001M)))))
+  (testing "Rounds up for values > 0.5"
+    (is (= 2.0 (sut/round-half-down (bigdec 1.9999999999999999999))))
+    (is (= 2.0 (sut/round-half-down (bigdec 1.6))))
+    (is (= 2.0 (sut/round-half-down (+ (bigdec 1.5) 0.0000000000000000000001M))))))
+
+(deftest to-displayable-float-test
+  (testing "Generates floats to 4 significant figures"
+    (is (= 1.0 (sut/to-displayable-float (bigdec 1.0))))
+    (is (= 1.5 (sut/to-displayable-float (bigdec 1.5))))
+    (is (= 1.1 (sut/to-displayable-float (bigdec 1.1))))
+    (is (= 1.001 (sut/to-displayable-float (bigdec 1.001))))
+    (is (= 1.0 (sut/to-displayable-float (bigdec 1.0001))))
+    (is (= 1.001 (sut/to-displayable-float (bigdec 1.0005))))
+    (is (= 1.123 (sut/to-displayable-float (bigdec 1.1234567))))
+    (is (= 123500.0 (sut/to-displayable-float (bigdec 123456.1234567))))))
+
 (deftest monthly-holiday-accrual-rate-test
   (testing "Calculates accrual rate for given entitlement, working pattern and full time hours for full time employees"
     (is (= 1 (sut/monthly-holiday-accrual-rate #:juxt.home {:holiday-entitlement 12 :working-pattern full-time-work-pattern :full-time-hours 40})))

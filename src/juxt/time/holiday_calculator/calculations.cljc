@@ -9,10 +9,10 @@
             #?(:cljs [goog.string :as gstring])))
 
 (defn round-half-down [dec]
-  (.setScale dec 0 java.math.RoundingMode/HALF_DOWN))
+  (double (.setScale dec 0 java.math.RoundingMode/HALF_DOWN)))
 
 (defn to-displayable-float [m]
-  (float (.round m (java.math.MathContext. 4))))
+  (double (.round m (java.math.MathContext. 4))))
 
 
 (defn holiday-duration-in-hours
