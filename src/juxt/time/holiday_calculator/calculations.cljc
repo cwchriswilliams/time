@@ -2,6 +2,7 @@
 
 (ns juxt.time.holiday-calculator.calculations
   (:require [clojure.string :as str]
+            [clojure.math :as Math]
             [tick.core :as t]
             [tick.alpha.interval :as t.i]
             [tick.protocols :as p]
@@ -9,10 +10,11 @@
             #?(:cljs [goog.string :as gstring])))
 
 (defn round-half-down [dec]
-  (double (.setScale dec 0 java.math.RoundingMode/HALF_DOWN)))
+  (double (Math/ceil (- dec 0.5))))
 
 (defn to-displayable-float [m]
-  (double (.round m (java.math.MathContext. 4))))
+  (parse-double #?(:clj (format "%.4g" m)
+                   :cljs (gstring/format "%.4g" m))))
 
 
 (defn holiday-duration-in-hours

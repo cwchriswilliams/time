@@ -140,14 +140,16 @@
                  monday))))))
 
 (deftest round-half-down-test
-  (testing "Rounds down for values <= 0.5"
-    (is (= 1.0 (sut/round-half-down (bigdec 1.0))))
-    (is (= 1.0 (sut/round-half-down (bigdec 1.5))))
-    (is (= 1.0 (sut/round-half-down (- (bigdec 1.5) 0.0000000000000000000001M)))))
+  (testing "Rounds down for values < 0.5"
+    (is (= 1.0 (sut/round-half-down 1.0)))
+    (is (= 1.0 (sut/round-half-down (- 1.5 0.0000000000000000000001M)))))
+  (testing "Rounds down for values = 0.5"
+    (is (= 1.0 (sut/round-half-down 1.5)))
+    )
   (testing "Rounds up for values > 0.5"
-    (is (= 2.0 (sut/round-half-down (bigdec 1.9999999999999999999))))
-    (is (= 2.0 (sut/round-half-down (bigdec 1.6))))
-    (is (= 2.0 (sut/round-half-down (+ (bigdec 1.5) 0.0000000000000000000001M))))))
+    (is (= 2.0 (sut/round-half-down 1.9999999999999999999)))
+    (is (= 2.0 (sut/round-half-down 1.6)))
+    (is (= 2.0 (sut/round-half-down (+ 1.5 0.000000001M))))))
 
 (deftest to-displayable-float-test
   (testing "Generates floats to 4 significant figures"
