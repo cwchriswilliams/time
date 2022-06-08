@@ -46,6 +46,55 @@
                                          :juxt.home/employment-type "EMPLOYEE"
                                          :juxt.home/status "TERMINATED"}])
 
+(deftest staff-member-record->interval-test
+  (testing "If effective-to is not provided, end is set to ceiling date"
+    (is (= {:juxt.home/effective-from (t/date-time "2019-03-05T00:00")
+            :tick/beginning (t/date-time "2019-03-05T00:00")
+            :tick/end (t/date-time "2020-04-06T00:00")}
+           (sut/staff-member-record->interval
+            {:juxt.home/effective-from (t/date-time "2019-03-05T00:00")}
+            (t/date-time "2020-04-06T00:00"))))
+    (is (= {:juxt.home/effective-from (t/date-time "2021-06-01T00:00")
+            :tick/beginning (t/date-time "2021-06-01T00:00")
+            :tick/end (t/date-time "2022-01-01T00:00")}
+           (sut/staff-member-record->interval
+            {:juxt.home/effective-from (t/date-time "2021-06-01T00:00")}
+            (t/date-time "2022-01-01T00:00")))))
+  (testing "If effective-to is provided and is before ceiling date, end is set to effective-to"
+    (is (= {:juxt.home/effective-from (t/date-time "2019-03-05T00:00")
+            :juxt.home/effective-to (t/date-time "2019-06-06T00:00")
+            :tick/beginning (t/date-time "2019-03-05T00:00")
+            :tick/end (t/date-time "2019-06-06T00:00")}
+           (sut/staff-member-record->interval
+            {:juxt.home/effective-from (t/date-time "2019-03-05T00:00")
+             :juxt.home/effective-to (t/date-time "2019-06-06T00:00")}
+            (t/date-time "2020-04-06T00:00"))))
+    (is (= {:juxt.home/effective-from (t/date-time "2021-06-01T00:00")
+            :juxt.home/effective-to (t/date-time "2021-09-04T00:00")
+            :tick/beginning (t/date-time "2021-06-01T00:00")
+            :tick/end (t/date-time "2021-09-04T00:00")}
+           (sut/staff-member-record->interval
+            {:juxt.home/effective-from (t/date-time "2021-06-01T00:00")
+             :juxt.home/effective-to (t/date-time "2021-09-04T00:00")}
+            (t/date-time "2022-01-01T00:00")))))
+  (testing "If effective-to is provided and is after ceiling date, end is set to ceiling-date"
+    (is (= {:juxt.home/effective-from (t/date-time "2019-03-05T00:00")
+            :juxt.home/effective-to (t/date-time "2021-06-06T00:00")
+            :tick/beginning (t/date-time "2019-03-05T00:00")
+            :tick/end (t/date-time "2020-04-06T00:00")}
+           (sut/staff-member-record->interval
+            {:juxt.home/effective-from (t/date-time "2019-03-05T00:00")
+             :juxt.home/effective-to (t/date-time "2021-06-06T00:00")}
+            (t/date-time "2020-04-06T00:00"))))
+    (is (= {:juxt.home/effective-from (t/date-time "2021-06-01T00:00")
+            :juxt.home/effective-to (t/date-time "2022-09-04T00:00")
+            :tick/beginning (t/date-time "2021-06-01T00:00")
+            :tick/end (t/date-time "2022-01-01T00:00")}
+           (sut/staff-member-record->interval
+            {:juxt.home/effective-from (t/date-time "2021-06-01T00:00")
+             :juxt.home/effective-to (t/date-time "2022-09-04T00:00")}
+            (t/date-time "2022-01-01T00:00"))))))
+
 (deftest working-pattern->interval-test
   (let [sunday (t/date "2022-06-05")
         monday (t/date "2022-06-06")
