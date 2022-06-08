@@ -45,7 +45,7 @@
     (*
      holiday-entitlement
      ;; pro-rata for part-time workers
-     (/ (.toHours (working-pattern->duration working-pattern)) full-time-hours)
+     (/ (t/hours (working-pattern->duration working-pattern)) full-time-hours)
      ;; divide by 12, to get to the monthly rate
      (/ 1 12))))
 
