@@ -78,7 +78,7 @@
 (defn staff-member-record->interval [period ceiling]
   (let [from (dt-utils/date->local-date-time (:juxt.home/effective-from period))
         to (if-let [effective-to (some-> (:juxt.home/effective-to period) dt-utils/date->local-date-time)]
-             (if (.isBefore effective-to ceiling) effective-to ceiling) ceiling)]
+             (if (t/< effective-to ceiling) effective-to ceiling) ceiling)]
     (into period (t.i/new-interval from to))))
 
 (defn ->holiday-intervals
